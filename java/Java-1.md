@@ -52,5 +52,56 @@ BigInteger a = BigInteger.valueOf(10);
 
 需要注意，不能使用运算符（+，*）等直接对他们进行运算，而要使用对应的方法，`add(),multiply()`等
 
-# 2.对象和类
+# 2.接口，内部类
+
+java8之前，接口的方法默认都是public修饰,且方法没有实现，字段都是public static final修饰，java8之后，允许接口定义默认方法和静态方法。静态方法增强了接口的功能，而对其子类和子接口没有影响，而对于默认方法，子类无须实现就可以拥有该方法，优雅的扩展了接口。
+
+```java
+public interface Test {
+    default String getString(){
+        return "";
+    }
+    static int getInt(){
+        return 0;
+    }
+}
+```
+
+需要说明的是，如果默认方法冲突该怎么办呢?Java提供了如下两种规则：
+
+- 超类优先：如果一个类继承一个超类且同时实现一个接口，如果超类提供了一个具体方法，那么同名且具有相同参数类型的默认方法会被忽略
+
+- 接口冲突重写：如果两个接口都提供了相同的默认方法，则实现类必须覆盖这个方法解决冲突
+
+  ```java
+  interface A{
+      default String getName(){
+          return "A";
+      }
+  }
+  interface B{
+      default String getName(){
+          return "B";
+      }
+  }
+  class C implements A,B{
+      public String getName(){
+          return A.super.getName();
+      }
+  }
+  ```
+
+在Java9之后，接口的方法也可以是private的了，通常作为接口中其他方法的辅助方法。
+
+## 2.1 comparable
+
+一般而言，实现`comparable`接口时，都建议其`compareTo`方法与`equals`方法一致，即`x.equals(y)`时，`x.compareTo(y)`应当等于0，大多数类都遵从这个协议，但有一个重要的例外，`BigDecimal`
+
+```java
+BigDecimal x = new BigDecimal("1.0");
+BigDecimal y = new BigDecimal("1.00");
+System.out.println(x.equals(y)+","+x.compareTo(y));
+```
+
+打印输出，会发现`x.equals(y)`值为false，因为两个数精度不同。，而`x.compareTo(y)`等于0，理想结果应该不返回0才对，但是没有明确的方法能够确定这两个数的大小。
 
