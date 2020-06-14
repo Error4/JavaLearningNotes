@@ -1,4 +1,11 @@
-zookeeper的 JavaAPI
+`zonde `是 `zookeeper `集合的核心组件，` zookeeper API` 提供了一小组使用 `zookeeper `集群来操作`znode `的所有细节
+
+客户端应该遵循以下步骤，与`zookeeper`服务器进行清晰和干净的交互
+
+- 连接到`zookeeper`服务器。`zookeeper`服务器为客户端分配会话`ID`
+- 定期向服务器发送心跳。否则，`zookeeper `服务器将过期会话`ID`，客户端需要重新连接
+- 只要会话`Id`处于活动状态，就可以获取/设置`znode`
+- 所有任务完成后，断开与`zookeeper`服务器连接，如果客户端长时间不活动，则`zookeeper`服务器将自动断开客户端
 
 POM依赖
 
@@ -9,15 +16,6 @@ POM依赖
     <version>3.4.10</version>
 </dependency>
 ```
-
-`zonde `是 `zookeeper `集合的核心组件，` zookeeper API` 提供了一小组使用 `zookeeper `集群来操作`znode `的所有细节
-
-客户端应该遵循以下步骤，与`zookeeper`服务器进行清晰和干净的交互
-
-- 连接到`zookeeper`服务器。`zookeeper`服务器为客户端分配会话`ID`
-- 定期向服务器发送心跳。否则，`zookeeper `服务器将过期会话`ID`，客户端需要重新连接
-- 只要会话`Id`处于活动状态，就可以获取/设置`znode`
-- 所有任务完成后，断开与`zookeeper`服务器连接，如果客户端长时间不活动，则`zookeeper`服务器将自动断开客户端
 
 # 1.连接到Zookeeper
 
@@ -362,7 +360,7 @@ public static void exists2() throws Exception{
 
 客户端**首先将 `Watcher`注册到服务端**，同时将 `Watcher`对象**保存到客户端的`watch`管理器中**。当`Zookeeper`服务端监听的数据状态发生变化时，服务端会**主动通知客户端**，接着客户端的 `Watch`管理器会**触发相关 `Watcher`**来回调相应处理逻辑，从而完成整体的数据 `发布/订阅`流程
 
-![zookeeper-6](assets/zookeeper-6.png)
+![](https://s1.ax1x.com/2020/06/14/NSqR61.png)
 
 ## watcher特性
 
@@ -377,7 +375,7 @@ public static void exists2() throws Exception{
 
 `Watcher`是一个接口，任何实现了`Watcher`接口的类就算一个新的`Watcher`。`Watcher`内部包含了两个枚举类：`KeeperState`、`EventType`
 
-![zookeeper-7](assets/zookeeper-7.png)
+![](https://s1.ax1x.com/2020/06/14/NSqL6I.md.png)
 
 ### Watcher通知状态(KeeperState)
 
