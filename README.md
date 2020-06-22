@@ -25,3 +25,9 @@
 
 # Zookeeper
 
+1. [中间件系列之ZooKeeper-1-基础概念](https://github.com/Error4/JavaLearningNotes/blob/master/zookeeper/Zookeeper-%E5%9F%BA%E7%A1%80.md)
+2. [中间件系列之ZooKeeper-2-集群及相关原理](https://github.com/Error4/JavaLearningNotes/blob/master/zookeeper/Zookeeper-%E9%9B%86%E7%BE%A4%E5%8F%8A%E7%9B%B8%E5%85%B3%E5%8E%9F%E7%90%86.md)
+3. [中间件系列之ZooKeeper-3-JavaAPI](https://github.com/Error4/JavaLearningNotes/blob/master/zookeeper/Zookeeper-JavaAPI.md)
+4. [中间件系列之ZooKeeper-4-Curator高级特性](https://github.com/Error4/JavaLearningNotes/blob/master/zookeeper/Zookeeper-Curator%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7.md)
+
+# RabbitMQ
