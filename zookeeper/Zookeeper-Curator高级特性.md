@@ -1,3 +1,7 @@
+本文转载自[Zookeeper客户端Curator使用详解](http://www.throwable.club/2018/12/16/zookeeper-curator-usage/)
+
+相关代码已上传至github，有兴趣的朋友可以自行查看：https://github.com/Error4/ZooKeeperDemo
+
 **提醒：首先你必须添加curator-recipes依赖，下文仅仅对recipes一些特性的使用进行解释和举例，不打算进行源码级别的探讨**
 
 ```xml
@@ -20,11 +24,11 @@
 </dependency>
 ```
 
-### 缓存
+# 1.缓存
 
 Zookeeper原生支持通过注册Watcher来进行事件监听，但是开发者需要反复注册(Watcher只能单次注册单次使用)。Cache是Curator中对事件监听的包装，可以看作是对事件监听的本地缓存视图，能够自动为开发者处理反复注册监听。Curator提供了三种Watcher(Cache)来监听结点的变化。
 
-#### Path Cache
+## Path Cache
 
 Path Cache用来监控一个ZNode的子节点. 当一个子节点增加， 更新，删除时， Path Cache会改变它的状态， 会包含最新的子节点， 子节点的数据和状态，而状态的更变将通过PathChildrenCacheListener通知。
 
@@ -97,7 +101,7 @@ public class PathCacheDemo {
 
 **注意：**示例中的Thread.sleep(10)可以注释掉，但是注释后事件监听的触发次数会不全，这可能与PathCache的实现原理有关，不能太过频繁的触发事件！
 
-#### Node Cache
+## Node Cache
 
 Node Cache与Path Cache类似，Node Cache只是监听某一个特定的节点。它涉及到下面的三个类：
 
@@ -147,7 +151,7 @@ public class NodeCacheDemo {
 
 **注意：**NodeCache只能监听一个节点的状态变化。
 
-#### Tree Cache
+## Tree Cache
 
 Tree Cache可以监控整个树上的所有节点，类似于PathCache和NodeCache的组合，主要涉及到下面四个类：
 
@@ -189,7 +193,7 @@ public class TreeCacheDemo {
 
 **注意：**TreeCache在初始化(调用`start()`方法)的时候会回调`TreeCacheListener`实例一个事TreeCacheEvent，而回调的TreeCacheEvent对象的Type为INITIALIZED，ChildData为null，此时`event.getData().getPath()`很有可能导致空指针异常，这里应该主动处理并避免这种情况。
 
-### Leader选举
+# 2.Leader选举
 
 在分布式计算中， **leader elections**是很重要的一个功能， 这个选举过程是这样子的： 指派一个进程作为组织者，将任务分发给各节点。 在任务开始前， 哪个节点都不知道谁是leader(领导者)或者coordinator(协调者). 当选举算法开始执行后， 每个节点最终会得到一个唯一的节点作为任务leader. 除此之外， 选举还经常会发生在leader意外宕机的情况下，新的leader要被选举出来。
 
@@ -199,7 +203,7 @@ Curator 有两种leader选举的recipe,分别是**LeaderSelector**和**LeaderLat
 
 前者是所有存活的客户端不间断的轮流做Leader，大同社会。后者是一旦选举出Leader，除非有客户端挂掉重新触发选举，否则不会交出领导权。
 
-#### LeaderLatch
+## LeaderLatch
 
 LeaderLatch有两个构造函数：
 
@@ -308,7 +312,7 @@ public class LeaderLatchDemo extends BaseConnectionInfo {
 只能通过`close`释放当前的领导权。
 `await`是一个阻塞方法， 尝试获取leader地位，但是未必能上位。
 
-#### LeaderSelector
+## LeaderSelector
 
 LeaderSelector使用的时候主要涉及下面几个类：
 
@@ -411,7 +415,7 @@ public class LeaderSelectorDemo {
 
 对比可知，LeaderLatch必须调用`close()`方法才会释放领导权，而对于LeaderSelector，通过`LeaderSelectorListener`可以对领导权进行控制， 在适当的时候释放领导权，这样每个节点都有可能获得领导权。从而，LeaderSelector具有更好的灵活性和可控性，建议有LeaderElection应用场景下优先使用LeaderSelector。
 
-### 分布式锁
+# 3.分布式锁
 
 **提醒：**
 
@@ -419,7 +423,7 @@ public class LeaderSelectorDemo {
 
 2.分布式的锁全局同步， 这意味着任何一个时间点不会有两个客户端都拥有相同的锁。
 
-#### 可重入共享锁—Shared Reentrant Lock
+## 可重入共享锁—Shared Reentrant Lock
 
 **Shared意味着锁是全局可见的**， 客户端都可以请求锁。 Reentrant和JDK的ReentrantLock类似，即可重入， 意味着同一个客户端在拥有锁的同时，可以多次获取，不会被阻塞。 它是由类`InterProcessMutex`来实现。 它的构造函数为：
 
@@ -567,7 +571,7 @@ public class InterProcessMutexDemo {
 
 **你不应该在多个线程中用同一个InterProcessMutex**， 你可以在每个线程中都生成一个新的InterProcessMutex实例，它们的path都一样，这样它们可以共享同一个锁。
 
-#### 不可重入共享锁—Shared Lock
+## 不可重入共享锁—Shared Lock
 
 这个锁和上面的`InterProcessMutex`相比，就是少了Reentrant的功能，也就意味着它不能在同一个线程中重入。这个类是`InterProcessSemaphoreMutex`,使用方法和`InterProcessMutex`类似
 
@@ -650,7 +654,7 @@ public class InterProcessSemaphoreMutexDemo {
 
 这样也就验证了`InterProcessSemaphoreMutex`实现的锁是不可重入的。
 
-#### 可重入读写锁—Shared Reentrant Read Write Lock
+## 可重入读写锁—Shared Reentrant Read Write Lock
 
 类似JDK的**ReentrantReadWriteLock**。一个读写锁管理一对相关的锁。一个负责读操作，另外一个负责写操作。读操作在写锁没被使用时可同时由多个进程使用，而写锁在使用时不允许读(阻塞)。
 
@@ -735,7 +739,7 @@ public class ReentrantReadWriteLockDemo {
 }
 ```
 
-#### 信号量—Shared Semaphore
+## 信号量—Shared Semaphore
 
 一个计数的信号量类似JDK的Semaphore。 JDK中Semaphore维护的一组许可(**permits**)，而Curator中称之为租约(**Lease**)。 有两种方式可以决定semaphore的最大租约数。第一种方式是用户给定path并且指定最大LeaseSize。第二种方式用户给定path并且使用`SharedCountReader`类。**如果不使用SharedCountReader, 必须保证所有实例在多进程中使用相同的(最大)租约数量,否则有可能出现A进程中的实例持有最大租约数量为10，但是在B进程中持有的最大租约数量为20，此时租约的意义就失效了。**
 
@@ -798,7 +802,7 @@ public class InterProcessSemaphoreDemo {
 
 上面说讲的锁都是公平锁(fair)。 总ZooKeeper的角度看， 每个客户端都按照请求的顺序获得锁，不存在非公平的抢占的情况。
 
-#### 多共享锁对象 —Multi Shared Lock
+## 多共享锁对象 —Multi Shared Lock
 
 Multi Shared Lock是一个锁的容器。 当调用`acquire()`， 所有的锁都会被`acquire()`，如果请求失败，所有的锁都会被release。 同样调用release时所有的锁都被release(**失败被忽略**)。 基本上，它就是组锁的代表，在它上面的请求释放操作都会传递给它包含的所有的锁。
 
@@ -858,11 +862,11 @@ public class MultiSharedLockDemo {
 
 **最后再重申一次， 强烈推荐使用ConnectionStateListener监控连接的状态，当连接状态为LOST，锁将会丢失。**
 
-### 分布式计数器
+# 4.分布式计数器
 
 顾名思义，计数器是用来计数的, 利用ZooKeeper可以实现一个集群共享的计数器。 只要使用相同的path就可以得到最新的计数器值， 这是由ZooKeeper的一致性保证的。Curator有两个计数器， 一个是用int来计数(`SharedCount`)，一个用long来计数(`DistributedAtomicLong`)。
 
-#### 分布式int计数器—SharedCount
+## 分布式int计数器—SharedCount
 
 这个类使用int类型来计数。 主要涉及三个类。
 
@@ -938,7 +942,7 @@ count.trySetCount(count.getVersionedValue(), count.getCount() + rand.nextInt(10)
 
 强烈推荐使用`ConnectionStateListener`。 在本例中`SharedCountListener`扩展`ConnectionStateListener`。
 
-#### 分布式long计数器—DistributedAtomicLong
+## 分布式long计数器—DistributedAtomicLong
 
 再看一个Long类型的计数器。 除了计数的范围比`SharedCount`大了之外， 它首先尝试使用乐观锁的方式设置计数器， 如果不成功(比如期间计数器已经被其它client更新了)， 它使用`InterProcessMutex`方式来更新计数值。
 
@@ -1009,7 +1013,7 @@ public class DistributedAtomicLongDemo {
 }
 ```
 
-### 分布式队列
+# 5.分布式队列
 
 使用Curator也可以简化Ephemeral Node (**临时节点**)的操作。Curator也提供ZK Recipe的分布式队列实现。 利用ZK的 PERSISTENTS_EQUENTIAL节点， 可以保证放入到队列中的项目是按照顺序排队的。 如果单一的消费者从队列中取数据， 那么它是先入先出的，这也是队列的特点。 如果你严格要求顺序，你就的使用单一的消费者，可以使用Leader选举只让Leader作为唯一的消费者。
 
@@ -1023,7 +1027,7 @@ public class DistributedAtomicLongDemo {
 
 尽管如此， Curator还是创建了各种Queue的实现。 如果Queue的数据量不太多，数据量不太大的情况下，酌情考虑，还是可以使用的。
 
-#### 分布式队列—DistributedQueue
+## 分布式队列—DistributedQueue
 
 DistributedQueue是最普通的一种队列。 它设计以下四个类：
 
@@ -1107,7 +1111,7 @@ public class DistributedQueueDemo {
 
 例子中定义了两个分布式队列和两个消费者，因为PATH是相同的，会存在消费者抢占消费消息的情况。
 
-#### 带Id的分布式队列—DistributedIdQueue
+## 带Id的分布式队列—DistributedIdQueue
 
 DistributedIdQueue和上面的队列类似，**但是可以为队列中的每一个元素设置一个ID**。 可以通过ID把队列中任意的元素移除。 它涉及几个类：
 
@@ -1207,7 +1211,7 @@ public class DistributedIdQueueDemo {
 }
 ```
 
-#### 优先级分布式队列—DistributedPriorityQueue
+## 优先级分布式队列—DistributedPriorityQueue
 
 优先级队列对队列中的元素按照优先级进行排序。 **Priority越小， 元素越靠前， 越先被消费掉**。 它涉及下面几个类：
 
@@ -1302,7 +1306,7 @@ public class DistributedPriorityQueueDemo {
 
 有时候你可能会有错觉，优先级设置并没有起效。那是因为优先级是对于队列积压的元素而言，如果消费速度过快有可能出现在后一个元素入队操作之前前一个元素已经被消费，这种情况下DistributedPriorityQueue会退化为DistributedQueue。
 
-#### 分布式延迟队列—DistributedDelayQueue
+## 分布式延迟队列—DistributedDelayQueue
 
 JDK中也有DelayQueue，不知道你是否熟悉。 DistributedDelayQueue也提供了类似的功能， 元素有个delay值， 消费者隔一段时间才能收到元素。 涉及到下面四个类。
 
@@ -1398,7 +1402,7 @@ public class DistributedDelayQueueDemo {
 }
 ```
 
-#### SimpleDistributedQueue
+## SimpleDistributedQueue
 
 前面虽然实现了各种队列，但是你注意到没有，这些队列并没有实现类似JDK一样的接口。 `SimpleDistributedQueue`提供了和JDK基本一致的接口(但是没有实现Queue接口)。 创建很简单：
 
@@ -1551,13 +1555,13 @@ try {
 }
 ```
 
-### 分布式屏障—Barrier
+# 6.分布式屏障—Barrier
 
 分布式Barrier是这样一个类： 它会阻塞所有节点上的等待进程，直到某一个被满足， 然后所有的节点继续进行。
 
 比如赛马比赛中， 等赛马陆续来到起跑线前。 一声令下，所有的赛马都飞奔而出。
 
-#### DistributedBarrier
+## DistributedBarrier
 
 `DistributedBarrier`类实现了栅栏的功能。 它的构造函数如下：
 
@@ -1630,7 +1634,7 @@ public class DistributedBarrierDemo {
 
 如果你开始不设置栅栏，所有的线程就不会阻塞住。
 
-#### 双栅栏—DistributedDoubleBarrier
+## 双栅栏—DistributedDoubleBarrier
 
 双栅栏允许客户端在计算的开始和结束时同步。当足够的进程加入到双栅栏时，进程开始计算， 当计算完成时，离开栅栏。 双栅栏类是`DistributedDoubleBarrier`。 构造函数为:
 
@@ -1688,10 +1692,3 @@ public class DistributedDoubleBarrierDemo {
 }
 ```
 
-## 3.6 实现分布式锁
-
-在获取分布式锁的时候在locker节点下创建临时顺序节点，释放锁的时候删除该临时节点。客户端调用createNode方法在locker下创建临时顺序节点，
-
-然后调用getChildren(“locker”)来获取locker下面的所有子节点，注意此时不用设置任何Watcher。客户端获取到所有的子节点path之后，如果发现自己创建的节点在所有创建的子节点序号最小，那么就认为该客户端获取到了锁。
-
-如果发现自己创建的节点并非locker所有子节点中最小的，说明自己还没有获取到锁，此时客户端需要找到比自己小的那个节点，然后对其调用exist()方法，同时对其注册事件监听器。之后，让这个被关注的节点删除，则客户端的Watcher会收到相应通知，此时再次判断自己创建的节点是否是locker子节点中序号最小的，如果是则获取到了锁，如果不是则重复以上步骤继续获取到比自己小的一个节点并注册监听。当前这个过程中还需要许多的逻辑判断。

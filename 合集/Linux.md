@@ -520,4 +520,77 @@ Linux 链接分两种，一种被称为硬链接（Hard Link），另一种被�
 - 同时删除原文件f1,硬连接f2，整个文件会真正的被删除。
 
 
-  
+
+
+
+# 查找
+
+在系统里查找文件，是所有工程师都必备的技能（不管你用的是 Windows 、Linux、还是 MacOS 系统）。对于 Linux 操作系统，单单一个 find 命令就可以完成非常多的搜索工作。
+
+但是，文件搜索命令远不止一个 find 命令，还有很多。本文就对 Linux 下文件搜索命令进行一个科普，让你能够在短时间内找到自己需要的文件。
+
+#### 1. find
+
+`find` 命令应该是最经典的命令了，谈到搜索工具第一个想到的肯定是 find 命令。但是，find 命令非常强大，想要把它的功能都介绍一遍，恐怕要写好几篇文章。
+
+所以，这里就偷个懒，介绍最基本的，根据文件名查找文件的方法。假如我们想搜索当前目录（及其子目录）下所有 `.sh` 文件，可以这样搜索：
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd87807e9834?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+#### 2. locate
+
+`locate` 是另外一个根据文件名来搜索文件的命令。区别于 find 命令，locate 命令无需指定路径，直接搜索即可。
+
+这个命令不是直接去系统的各个角落搜索文件，而是在一个叫 `mlocate.db` 的数据库下搜索。这个数据库位于 `/var/lib/mlocate/mlocate.db` ，它包含了系统里所有文件的索引，并且会在每天早上的时候由 cron 工具自动更新一次。
+
+正因为如此，locate 的搜索速度远快于 find 命令，因为它直接在数据库里检索，速度自然更快。
+
+locate 命令在找到文件之后，将直接显示该文件的绝对路径，比如：
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd879a945652?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+但是 locate 命令有个弊端，它无法搜索当天所创建的文件，因为它的数据库一天只在早上更新一次。比如我现在创建一个新文件，locate 没办法搜索到：
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd87b80f2c32?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+为了解决这个问题，我们可以使用 `updatedb` 命令手动去更新它的数据库：
+
+```
+$ sudo updadb复制代码
+```
+
+然后，我们就可以搜索到新文件了。
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd87d88a7043?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+#### 3. which
+
+`which` 命令主要用来查找可执行文件的位置，它搜索的位置指定在 `$PATH` 及 `$MANPATH` 环境变量下的值，默认情况下，`which` 命令将显示可执行文件的第一个存储位置：
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd87f0a3d92f?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+如果某个可执行文件存储在多个位置，可以使用 `-a` 选项列出所有的位置。
+
+如果你想一次性查找多个文件，可以直接跟在 which 命令后面即可。
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd880eca6bb6?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+#### 4. whereis
+
+`whereis` 命令会在系统默认安装目录（一般是有root权限时默认安装的软件）查找二进制文件、源码、文档中包含给定查询关键词的文件。（默认目录有 `/bin`, `/sbin`, `/usr/bin`, `/usr/lib`, `/usr/local/man`等类似路径）。
+
+一般包含以下三部分内容：
+
+- 二进制文件的路径
+- 二进制文件的源码路径
+- 对应 man 文件的路径
+
+比如我们现在搜索 ls 命令：
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd882d4c2ef0?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+我们可以使用 `-b` 选项来只搜索可执行文件所在位置，使用 `-B` 选项指定搜索位置，使用 `-f` 选项列出文件的信息。
+
+![img](https://user-gold-cdn.xitu.io/2020/6/16/172bcd88477db7c4?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+同样地，我们可以使用 `-s` 限定只搜索源码路径，使用 `-m` 搜索 man page 路径，使用 `-s` 指定搜索源代码文件的路径，使用 `-M` 指定搜索帮助文件的路径。

@@ -22,7 +22,7 @@ ZooKeeper is a centralized service for maintaining configuration information, na
 
 **`zookeeper`就可以提供这样一种服务**，其使用`Zab`这种一致性协议来保证一致性。现在有很多开源项目使用`zookeeper`来维护配置，如在 `hbase`中，客户端就是连接一个 `zookeeper`，获得必要的 `hbase`集群的配置信息，然后才可以进一步操作。还有在开源的消息队列 `kafka`中，也便用`zookeeper`来维护 `brokers`的信息。在 `alibaba`开源的`soa`框架`dubbo`中也广泛的使用`zookeeper`管理一些配置来实现服务治理。
 
-![zookeeper-2](assets/zookeeper-2.png)
+![](https://s1.ax1x.com/2020/06/22/NY4Vje.png)
 
 ## 分布式锁服务
 
@@ -32,7 +32,7 @@ ZooKeeper is a centralized service for maintaining configuration information, na
 
 一个集群有时会因为各种软硬件故障或者网络故障，出现棊些服务器挂掉而被移除集群，而某些服务器加入到集群中的情况，`zookeeper`会将这些服务器加入/移出的情况通知给集群中的其他正常工作的服务器，以及时调整存储和计算等任务的分配和执行等。此外`zookeeper`还会对故障的服务器做出诊断并尝试修复。
 
-![zookeeper-3](assets/zookeeper-3.png)
+![](https://s1.ax1x.com/2020/06/22/NY4NHs.md.png)
 
 ## 生产分布式唯一ID
 
@@ -60,7 +60,7 @@ ZooKeeper is a centralized service for maintaining configuration information, na
 
 `znode`，兼具文件和目录两种特点，即像文件一样维护着数据、元信息、ACL、时间戳等数据结构，又像目录一样可以作为路径标识的一部分
 
-![zookeeper-4](assets/zookeeper-4.png)
+![](https://s1.ax1x.com/2020/06/22/NY4cDJ.png)
 
 一个`znode`大体上分为`3`个部分：
 

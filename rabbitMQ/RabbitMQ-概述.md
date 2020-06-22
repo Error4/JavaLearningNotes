@@ -50,7 +50,7 @@ JMS，即Java消息服务(Java Message Service) 是一个Java平台中关于面�
 
 **RabbitMQ 就是基于 AMQP 协议实现的。**
 
-![1588926508761](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588926508761.png)
+![](https://s1.ax1x.com/2020/06/22/NY2cxH.png)
 
 # 3.常见消息队列对比
 
@@ -97,7 +97,7 @@ enable rabbitmq_management
 
 一个典型的RabbitMQ结构如下图所示：
 
-![rebbitMQ](D:\Program Files\笔记\image\rebbitMQ.webp)
+![rebbitMQ](https://s1.ax1x.com/2020/06/22/NYRj6H.jpg)
 
 **Broker：**标识消息队列服务器实体.
 
@@ -169,7 +169,7 @@ public class Producer {
 
 浏览器输入`http://localhost:15672/`连接控制台，可以看到队列已被创建，且有一条信息待消费
 
-​	![1588941799195](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588941799195.png)
+​	![](https://s1.ax1x.com/2020/06/22/NYWVXj.md.png)
 
 
 
@@ -208,4 +208,4 @@ public class Consumer {
 
 运行消费者，再次观察控制台，可以看到消息已经被消费了。
 
-![1588941396753](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588941396753.png)
+![](https://s1.ax1x.com/2020/06/22/NYWn7q.md.png)
