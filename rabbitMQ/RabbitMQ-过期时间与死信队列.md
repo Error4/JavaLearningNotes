@@ -61,7 +61,7 @@ args.put("x-dead-letter-routing-key", "some-routing-key");
 
 生产者生产一条延时消息，根据需要延时时间的不同，利用不同的routingkey将消息路由到不同的延时队列，每个队列都设置了不同的TTL属性，并绑定在同一个死信交换机中，消息过期后，根据routingkey的不同，又会被路由到不同的死信队列中，消费者只需要监听对应的死信队列进行处理即可。
 
-![1589032459410](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1589032459410.png)
+![](https://s1.ax1x.com/2020/07/06/UiqCfH.md.png)
 
 ```java
 public class TimeoutDLX {
@@ -93,8 +93,8 @@ public class TimeoutDLX {
 
 通过控制台可以看到队列信息变化：
 
-![1589032916980](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1589032916980.png)
+![](https://s1.ax1x.com/2020/07/06/UiqVnP.md.png)
 
 延时10s后：
 
-![1589032868360](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1589032868360.png)
+![](https://s1.ax1x.com/2020/07/06/UiqnAS.md.png)

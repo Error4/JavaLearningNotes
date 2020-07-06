@@ -4,7 +4,7 @@
 
 如下所示，可以直接通过控制台添加用户
 
-![1588949371179](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588949371179.png)
+![](https://s1.ax1x.com/2020/06/27/NcAqsS.png)
 
 同时，也可以给用户设置角色，角色说明如下：
 
@@ -30,7 +30,7 @@
 
 点击对应的用户名，就能做修改或删除
 
-![1588950289453](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588950289453.png)
+![](https://s1.ax1x.com/2020/06/27/NcEpR0.md.png)
 
 当然，如上操作也可以使用命令来进行，在rabbitMQ安装目录../sbin目录下：
 
@@ -100,15 +100,15 @@ public class Producer {
 
 运行代码会发现代码报错
 
-![1588951475076](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588951475076.png)
+![](https://s1.ax1x.com/2020/06/27/NcEuz6.md.png)
 
 提示拒绝用户连接。至于原因，我们返回控制台看一下就明白了
 
-![1588951556651](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588951556651.png)
+![](https://s1.ax1x.com/2020/06/27/NcEeiR.png)
 
 可以看到，是由于我们没有设置用户可以访问Virtual host导致的。点击用户名称设置即可
 
-![1588951628793](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588951628793.png)
+![](https://s1.ax1x.com/2020/06/27/NcEnRx.png)
 
 也可以通过命令来执行
 
