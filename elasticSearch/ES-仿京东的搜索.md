@@ -1,4 +1,6 @@
-说明，本项目来源于B站视频教程[【狂神说Java】ElasticSearch7.6.x最新完整教程通俗易懂](https://www.bilibili.com/video/BV17a4y1x7zq?p=1)
+> 本项目来源于B站视频教程[【狂神说Java】ElasticSearch7.6.x最新完整教程通俗易懂](https://www.bilibili.com/video/BV17a4y1x7zq?p=1)
+>
+> 相关代码已上传至GitHub：https://github.com/Error4/ElasticSearchLearning
 
 # 准备数据
 
@@ -6,7 +8,7 @@
 
 以京东搜索的页面为例，检查网页源代码，可以发现，信息设置在如下div中
 
-![1588577155372](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588577155372.png)
+![](https://s1.ax1x.com/2020/09/26/0ifEtO.md.png)
 
 代码如下：
 
@@ -47,7 +49,7 @@ public class HtmlParseUtil {
 
 但是需要注意，比如受限于网速，图片也有可能会获取不到，为了提高访问速度，对于图片一般使用懒加载，再次观察网页源代码，可以看到`img`标签含有`source-data-lazy-img`属性，可以通过它来访问
 
-![1588578556755](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588578556755.png)
+![](https://s1.ax1x.com/2020/09/26/0if6CF.png)
 
 ```java
 String img = el.getElementsByTag("img").eq(0).attr("source-data-lazy-img");
@@ -64,7 +66,6 @@ String img = el.getElementsByTag("img").eq(0).attr("source-data-lazy-img");
 private RestHighLevelClient restHighLevelClient;
 @Autowired
 private HtmlParseUtil htmlParseUtil;
-
 
 public boolean parseContent(String keyword) throws IOException {
         List<JdContent> jdContents = htmlParseUtil.parseJD(keyword);

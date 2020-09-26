@@ -44,7 +44,7 @@ client.close();
 
 需要注意，当前版本，即2.2.6版的spring-boot-starter-data-elasticsearch，集成的ES客户端版本为6.8.7。
 
-![1588507065101](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588507065101.png)
+![](https://s1.ax1x.com/2020/09/26/0iWfk8.png)
 
 如果与实际ES版本不符合，需要在pom.xml中手动指定ES版本，以我使用的ES 7.6.1版本为例
 
@@ -237,12 +237,3 @@ void createIndex() throws IOException {
     }
 ```
 
-
-
-
-
-
-
-
-
-# 3.与Spring	Boot整合
