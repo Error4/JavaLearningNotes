@@ -1,4 +1,6 @@
-## 1.分布式查询与相关性算分
+> ES零散特性补充....
+
+# 1.分布式查询与相关性算分
 
 - 分布式搜索的运行机制
 
@@ -28,15 +30,15 @@
   - 数据量大时，尽量保证数据均匀分布
   - 在URL中制定参数“_search?search_type=dfs_query_then_fetch”，会把每个分片的词频和文档频率搜集后，完整的进行一次算分。但会耗费更多的CPU和内存，一般不建议使用
 
-## 2.排序
+# 2.排序
 
-​		ES默认使用相关性算分对结果进行**降序排序**
+ES默认使用相关性算分对结果进行**降序排序**
 
-​		可以设定sorting参数，自行设定排序，如果不指定_score,算分为null
+可以设定sorting参数，自行设定排序，如果不指定_score,算分为null
 
-![ES-sort](D:\Program Files\笔记\image\ES-sort.JPG)
+![](https://s1.ax1x.com/2020/10/05/0t1zjS.jpg)
 
-​		排序是针对文档原始内容排序，倒排索引无法使用。使用正排索引，通过文档ID和字段快速得到文档原始内容
+排序是针对文档原始内容排序，倒排索引无法使用。使用正排索引，通过文档ID和字段快速得到文档原始内容
 
 ES中有两种实现方法：
 
@@ -45,7 +47,7 @@ ES中有两种实现方法：
 
 ![](https://s1.ax1x.com/2020/05/03/JzpeMt.jpg)
 
-​		明确不需要做排序和聚合分析时，可通过mapping设置关闭Doc Values，增加索引速度，减少磁盘空间，但重新打开就需要重建索引
+明确不需要做排序和聚合分析时，可通过mapping设置关闭Doc Values，增加索引速度，减少磁盘空间，但重新打开就需要重建索引
 
 ```
 PUT xxx/_mapping
@@ -58,7 +60,79 @@ PUT xxx/_mapping
 }
 ```
 
-## 3. 分页与遍历
+# 3.补充特性
+
+## 3.1 数据路由
+
+之前我们说过ES的路由算法，shard = hash(routing) % number_of_primary_shards。routing值，默认是_id，也可以手动指定
+
+```json
+//先插入数据
+PUT /test_index/_doc/11?routing=12
+{
+  "test_field": "test routing not _id"
+}
+//获取数据不带routing参数
+GET /test_index/_doc/11
+{
+  "_index" : "test_index",
+  "_type" : "_doc",
+  "_id" : "11",
+  "found" : false
+}
+//获取数据带routing参数 参数值为自定义的值
+GET /test_index/_doc/11?routing=12
+{
+  "_index" : "test_index",
+  "_type" : "_doc",
+  "_id" : "11",
+  "_version" : 1,
+  "_seq_no" : 9,
+  "_primary_term" : 1,
+  "_routing" : "12",
+  "found" : true,
+  "_source" : {
+    "test_field" : "test routing not _id"
+  }
+}
+```
+
+手动指定的routing是很有用的，可以保证某一类的document一定被路由到一个shard中去
+
+## 3.2 .bool + term
+
+elasticsearch在查询的时候底层都会转换为bool + term的形式
+
+```json
+{
+    "match": {
+        "title": "java elasticsearch"
+    }
+}
+```
+
+使用类似上面的match query进行多值搜索的时候，elasticsearch会在底层自动将这个match query转换为bool的语法
+
+```json
+{
+    "bool": {
+        "should": [
+            {
+                "term": {
+                    "title": "java"
+                }
+            },
+            {
+                "term: {
+                    "title": "elasticsearch"
+                }
+            }
+        ]
+    }
+}
+```
+
+## 3.3  分页与遍历
 
 ​	默认情况下，按照相关性算分排序后，返回前10条
 
@@ -193,11 +267,11 @@ PUT xxx/_mapping
   }
   ```
 
-## 4. 并发读写
+## 3.4 并发读写
 
-​		ES使用乐观并发控制，如果更新一个文档，会将旧文档标记为删除，同时增加一个全新的文档，并将version+1
+ES使用乐观并发控制，如果更新一个文档，会将旧文档标记为删除，同时增加一个全新的文档，并将version+1
 
-​		可以通过添加额外的属性来控制：`if_seq_no+if_peimary_term`
+可以通过添加额外的属性来控制：`if_seq_no+if_peimary_term`
 
 同样，创建一个文档
 
@@ -263,7 +337,465 @@ PUT user/_doc/1?if_seq_no=0&&if_primary_term=1
 }
 ```
 
-## 5. 性能优化
+## 3.5 多字段搜索
+
+### best fields
+
+假设我们有一个让用户搜索博客文章的网站。其中有两个文档如下：
+
+```json
+PUT /test_index/_create/1
+{
+    "title": "Quick brown rabbits",
+    "body":  "Brown rabbits are commonly seen."
+}
+
+PUT /test_index/_create/2
+{
+    "title": "Keeping pets healthy",
+    "body":  "My quick brown fox eats rabbits on a regular basis."
+}
+```
+
+进行查询：
+
+```json
+GET /test_index/_search
+{
+    "query": {
+        "bool": {
+            "should": [
+                { "match": { "title": "Brown fox" }},
+                { "match": { "body":  "Brown fox" }}
+            ]
+        }
+    }
+}
+```
+
+我们发现文档1的相关度分数更高，排在了前面。文档1在两个字段中都包含了brown，因此两个match查询都匹配成功并拥有了一个分值。文档2在body字段中包含了brown以及fox，但是在title字段中没有出现任何搜索的单词。因此对body字段查询得到的高分加上对title字段查询得到的零分，然后在乘以匹配的查询子句数量1，最后除以总的查询子句数量2，导致整体分数值比文档1的低。
+
+相比使用bool查询，我们可以使用dis_max查询（Disjuction Max Query），意思就是返回匹配了任何查询的文档，并且分值是产生了最佳匹配的查询所对应的分值：
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "dis_max": {
+      "queries": [
+        {
+          "match": {
+            "title": "Brown fox"
+          }
+        },
+        {
+          "match": {
+            "body": "Brown fox"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+### multi_match查询
+
+multi_match查询提供了一个简便的方法用来对多个字段执行相同的查询。
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "dis_max": {
+      "tie_breaker": 0.3,
+      "queries": [
+        {
+          "match": {
+            "title": {
+              "query": "Quick brown fox",
+              "minimum_should_match": "30%"
+            }
+          }
+        },
+        {
+          "match": {
+            "body": {
+              "query": "Quick brown fox",
+              "minimum_should_match": "30%"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+可以通过multi_match简单地重写如下：
+
+```json
+GET /test_index/_search
+{
+  "query": {
+      "multi_match": {
+      "query": "Quick brown fox",
+      "type": "best_fields",
+      "fields": ["title", "body"],
+      "tie_breaker": 0.3,
+      "minimum_should_match": "30%"
+    }
+  }
+}
+```
+
+### most_fields查询
+
+most_fields是以字段为中心，这就使得它会查询最多匹配的字段。
+
+有两个文档如下：
+
+```json
+PUT /test_index/_create/1
+{
+    "street":   "5 Poland Street",
+    "city":     "Poland",
+    "country":  "United W1V",
+    "postcode": "W1V 3DG"
+}
+
+PUT /test_index/_create/2
+{
+    "street":   "5 Poland Street W1V",
+    "city":     "London",
+    "country":  "United Kingdom",
+    "postcode": "3DG"
+}
+```
+
+使用most_fields进行查询：
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "Poland Street W1V",
+      "type": "most_fields", 
+      "fields": ["street", "city", "country", "postcode"]
+    }
+  }
+}
+```
+
+**存在的问题：**
+
+它被设计用来找到匹配任意单词的多数字段，而不是找到跨越所有字段的最匹配的单词
+
+**解决方法：**
+
+`copy_to`参数将多个field组合成一个field
+
+建立索引
+
+```json
+PUT /test_index
+{
+  "mappings": {
+    "properties": {
+      "street": {
+        "type": "text",
+        "copy_to": "full_address"
+      },
+      "city": {
+        "type": "text",
+        "copy_to": "full_address"
+      },
+      "country": {
+        "type": "text",
+        "copy_to": "full_address"
+      },
+      "postcode": {
+        "type": "text",
+        "copy_to": "full_address"
+      },
+      "full_address": {
+        "type": "text"
+      }
+    }
+  }
+}
+```
+
+插入之前的数据
+
+查询：
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "match": {
+      "full_address": "Poland Street W1V"
+    }
+  }
+}
+```
+
+就会看到跨越所有字段的最匹配的单词的文档1排在前面
+
+## 3.6 近似搜索
+
+假设有两个句子
+
+```
+java is my favourite programming langurage, and I also think spark is a very good big data system.
+
+java spark are very related, because scala is spark's programming langurage and scala is also based on jvm like java. 
+```
+
+适用match query 搜索java spark
+
+```
+{
+    {
+        "match": {
+            "content": "java spark"
+        }
+    }
+}
+```
+
+match query 只能搜索到包含java和spark的document,但是不知道java和spark是不是离得很近。假设我们想要java和spark离得很近的document优先返回，就要给它一个更高的relevance score,这就涉及到了proximity match近似匹配
+
+使用**match_phrase**
+
+```
+GET /test_index/_search
+{
+  "query": {
+    "match_phrase": {
+      "content": "java spark"
+    }
+  }
+}
+```
+
+**slop**
+
+含义：query string搜索文本中的几个term,要经过几次移动才能与一个document匹配，这个移动的次数就是slop。
+举例说明：
+对于hello world, java is very good, spark is also very good. 假设我们要用match phrase 匹配到java spark。可以发现直接进行查询会查不到
+
+```json
+PUT /test_index/_create/1
+{
+  "content": "hello world, java is very good, spark is also very good."
+}
+
+GET /test_index/_search
+{
+  "query": {
+    "match_phrase": {
+      "content": "java spark"
+    }
+  }
+}
+```
+
+此时使用
+
+```json
+GET /_analyze
+{
+  "text": ["hello world, java is very good, spark is also very good."],
+  "analyzer": "standard"
+}
+```
+
+结果：
+
+```json
+{
+  "tokens" : [
+    {
+      "token" : "hello",
+      "start_offset" : 0,
+      "end_offset" : 5,
+      "type" : "<ALPHANUM>",
+      "position" : 0
+    },
+    {
+      "token" : "world",
+      "start_offset" : 6,
+      "end_offset" : 11,
+      "type" : "<ALPHANUM>",
+      "position" : 1
+    },
+    {
+      "token" : "java",
+      "start_offset" : 13,
+      "end_offset" : 17,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    },
+    {
+      "token" : "is",
+      "start_offset" : 18,
+      "end_offset" : 20,
+      "type" : "<ALPHANUM>",
+      "position" : 3
+    },
+    {
+      "token" : "very",
+      "start_offset" : 21,
+      "end_offset" : 25,
+      "type" : "<ALPHANUM>",
+      "position" : 4
+    },
+    {
+      "token" : "good",
+      "start_offset" : 26,
+      "end_offset" : 30,
+      "type" : "<ALPHANUM>",
+      "position" : 5
+    },
+    {
+      "token" : "spark",
+      "start_offset" : 32,
+      "end_offset" : 37,
+      "type" : "<ALPHANUM>",
+      "position" : 6
+    }
+```
+
+可以发现java的position是2，spark的position是6，那么我们只需要设置slop大于等于3（也就是移动3词就可以了）就可以搜到了
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "match_phrase": {
+      "content": {
+        "query": "java spark",
+        "slop": 3
+      }
+    }
+  }
+}
+```
+
+## 3.7  match和match_phrase实现召回率和精准度的平衡
+
+对于Elasticsearch而言，当使用match查询的时候：
+
+**召回率=匹配到的文档数量/所有文档的数量，所以匹配到的文档数量越多，召回率就越高。**
+
+**准确度指的就是匹配到的文档中，我们真正查询想要的文档相关度分数越高，返回结果中排在越前面，准确度就越高。**
+
+如果我们的搜索文本是java spark，那么在返回结果中只要包含java或者是spark的文档就返回，但是如果文档既包含java也包含spark，并且距离非常近，那么这样的文档分数会非常高，会在结果中优先被返回。
+
+**用bool组合match和match_phrase,来实现，must条件中用match,保证尽量匹配更多的结果，should中用match_phrase来提高我们想要的文档的相关度分数，让这些文档优先返回。**
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "test_field": "java spark"
+          }
+        }
+      ],
+      "should": [
+        {
+          "match_phrase": {
+            "test_field": {
+              "query": "java spark",
+              "slop": 10
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+## 3.8 前缀搜索、通配符搜索、正则搜索
+
+准备数据：
+
+```json
+PUT /test_index/_create/1
+{
+  "test_field": "C3D0-KD345"
+}
+PUT /test_index/_create/2
+{
+  "test_field": "C3K5-DFG65"
+}
+PUT /test_index/_create/3
+{
+  "test_field": "C4I8-UI365"
+}
+```
+
+### 前缀搜索
+
+搜索前缀为C3的文档：
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "match_phrase_prefix": {
+      "test_field": "C3"
+    }
+  }
+}
+```
+
+### 通配符搜索：
+
+通配符搜索跟前缀搜索类似，比前缀搜索要更加强大。也是需要扫描整个倒排索引，性能也是很差的。
+？：表示匹配任意一个字符
+
+- ：表示匹配任意多个字符
+
+示例：通配符搜索条件为*4?的文档
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "wildcard": {
+      "test_field": {
+        "value": "*4?"
+      }
+    }
+  }
+}
+```
+
+### 正则搜索：
+
+```json
+GET /test_index/_search
+{
+  "query": {
+    "regexp": {
+      "test_field": {
+        "value": ".*[a-z]{3}[0-9]{2}"
+      }
+    }
+  }
+}
+```
+
+# 4. 性能优化
 
 - 存储设备
 
@@ -285,7 +817,7 @@ PUT user/_doc/1?if_seq_no=0&&if_primary_term=1
   - **GC 默认采用CMS**的方式，并发但是有STW的问题，可以考虑使用G1收集器。
   - ES非常依赖文件系统缓存（Filesystem Cache），快速搜索。一般来说，应该至少确保**物理上有一半的可用内存分配到文件系统缓存。**
 
-## 6. 集群搭建
+# 5. 集群搭建
 
 在同一个子网内，只需要在每个节点上设置相同的集群名,elasticsearch就会自动的把这些集群名相同的节点组成一个集群。
 

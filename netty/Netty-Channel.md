@@ -1,4 +1,5 @@
-通过上一篇文章，已经对Netty的使用有了一个感性的认识，下面我会对Netty中重要的概念加以说明。首先就是Channel。
+> 通过上一篇文章，已经对Netty的使用有了一个感性的认识，下面我会对Netty中重要的概念加以说明。首先就是Channel。
+>
 
 # 1.概述
 
@@ -6,11 +7,11 @@
 
 在之后引入NIO编程之后，我们使用java.nio.channels包中的`ServerSocketChannel`和`SocketChannel`来代表服务端与客户端。
 
-在Netty中，对Java中的BIO、NIO编程api都进行了封装，分别：
+在Netty中，对Java中的BIO、NIO编程api都进行了进一步的封装，分别如下：
 
-1. 使用了`OioServerSocketChannel`，`OioSocketChannel`对java.net包中的ServerSocket与Socket进行了封装
+1. 使用了`OioServerSocketChannel`，`OioSocketChannel`对java.net包中的`ServerSocket`与`Socket`进行了封装
 
-2. 使用`NioServerSocketChannel`和`NioSocketChannel`对java.nio.channels包中的ServerSocketChannel和SocketChannel进行了封装。
+2. 使用`NioServerSocketChannel`和`NioSocketChannel`对java.nio.channels包中的`ServerSocketChannel`和`SocketChannel`进行了封装。
 
    具体继承关系如下：
 
@@ -92,7 +93,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
 其中有个`ChannelOption`类，可以认为`ChannelConfig`中用了一个Map来保存参数，Map的key是`ChannelOption`，`ChannelConfig` 定义了相关方法来获取和修改Map中的值。
 
-当我们想修改一个Map中的参数时，例如我们希望NioSocketChannel在工作过程中，使用`PooledByteBufAllocator`来分配内存，则可以使用类似以下方式来设置
+当我们想修改一个Map中的参数时，例如我们希望`NioSocketChannel`在工作过程中，使用`PooledByteBufAllocator`来分配内存，则可以使用类似以下方式来设置
 
 ```java
 Channel ch = ...;
@@ -301,4 +302,3 @@ public interface ChannelInboundHandler extends ChannelHandler {
 3、`ChannelHandlerContext` 中的`fireXXX`方法调用`ChannelHandler`中对应的`XXX`方法。由于可能存在多个`ChannelHandler`，因此每个`ChannelHandler`的`xxx`方法又要负责调用下一个`ChannelHandlerContext`的`fireXXX`方法，直到整个调用链完成
 
 
-  

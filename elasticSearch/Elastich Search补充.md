@@ -87,6 +87,8 @@ elasticsearch在查询的时候底层都会转换为bool + term的形式
 }
 ```
 
+
+
 # 8.相关性打分
 
 Lucene的评分叫做TF/IDF算法，基本意思就是词频算法。
@@ -498,6 +500,8 @@ PUT /test_index/_create/3
   "test_field": "C4I8-UI365"
 }
 ```
+
+### 前缀搜索
 
 搜索前缀为C3的文档：
 

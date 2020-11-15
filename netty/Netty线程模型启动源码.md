@@ -22,7 +22,7 @@ b.group(parentGroup, childGroup)
 
 其对应的reactor线程模型
 
-![1588733434414](C:/Users/wyf/AppData/Roaming/Typora/typora-user-images/1588733434414.png)
+![](https://s3.ax1x.com/2020/11/15/DFRh5t.png)
 
 大致包含如下5个步骤：
 
@@ -72,8 +72,6 @@ public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGro
   }
 }
 ```
-
-io.netty.bootstrap.AbstractBootstrap
 
 ```java
 public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
@@ -163,8 +161,6 @@ private ChannelFuture doBind(final SocketAddress localAddress) {
 2、初始化`NioServerSocketChannel`，即将我们前面通过`handler，option，attr`等方法设置的参数应用到`NioServerSocketChannel`上
 
 3、将`NioServerSocketChannel` 注册到`parentGroup`中，`parentGroup`会选择其中一个`NioEventLoop`来运行这个`NioServerSocketChannel`要完成的功能，即监听客户端的连接。
-
-以下是io.netty.bootstrap.AbstractBootstrap#initAndRegister的源码
 
 ```java
 final ChannelFuture initAndRegister() {
@@ -327,4 +323,4 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 }
 ```
 
-可以看到，对于线程数是2的幂的情况，用了位运算`&`来进一步优化取模的速度，跟我们熟悉的HasnMap优化方式一样。
+可以看到，对于线程数是2的幂的情况，用了位运算`&`来进一步优化取模的速度，跟我们熟悉的HasnMap优化方式一致。
